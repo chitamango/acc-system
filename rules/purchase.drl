@@ -1,0 +1,192 @@
+package com.purchaseorder.test
+ 
+import com.inter.manager.SharedArtifactManager;
+import com.inter.instance.SharedArtifactInstance;
+import com.inter.instance.SharedAttributeInstance;
+import com.inter.instance.CoordinationInstance;
+import com.inter.instance.SharedRuleInstance;
+import com.inter.instance.RoleInstance;
+//import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList; 
+import com.inter.factory.AccFactory;
+import org.apache.axiom.om.OMElement;
+import javax.xml.namespace.QName;
+import com.inter.event.MessageEvent;
+import com.inter.event.SharedArtifactChangeEvent;
+import com.inter.event.CombineEvent;
+
+
+global com.inter.manager.SharedArtifactManager ArtifactManager;
+ 
+rule "r01-createPurchanseOrder"
+   
+    dialect "java"
+    when
+	
+
+	$message: MessageEvent()
+	MessageEvent($name: getValueFromPart("customername") != null)
+	 MessageEvent($address: getValueFromPart("customeraddress")!= null)
+	//$name: MessageEvent(getValueFromPart("customername") != null)
+	//$address: MessageEvent(getValueFromPart("customeraddress")!= null)
+//	$name: String(this != null) from $message.getValueFromPart("customername");
+//	$address: String(this != null) from $message.getValueFromPart("customeraddress");
+		
+	
+    then
+	
+        
+	
+		ArrayList ListOfArtifact = new ArrayList<String>();
+		ListOfArtifact.add("purchase_order");
+		
+		AccFactory factory = new AccFactory();		
+		SharedRuleInstance sharedruleInstance = factory.getSharedRuleInstance("purchase","r01-createPurchanseOrder");
+	//	pc.startProcess(ListOfArtifact, "createOrderService","createOrder", ruleInstance,"order_process", $message.getMessage());
+	
+	//System.out.println("pass the test");
+	
+	ArtifactManager.startProcess(ListOfArtifact, "seller", "OnlineOrderService","placeOrder", sharedruleInstance, "purchase", $message.getMessage());
+	
+	
+		
+end
+
+rule "r02-addPurchanseItem"
+   
+    dialect "java"
+    when
+	
+
+	$message: CombineEvent()
+	CombineEvent($item: getValueFromPart("item") != null)
+	 CombineEvent($quantity: getValueFromPart("quantity")!= null)
+	//$name: MessageEvent(getValueFromPart("customername") != null)
+	//$address: MessageEvent(getValueFromPart("customeraddress")!= null)
+//	$name: String(this != null) from $message.getValueFromPart("customername");
+//	$address: String(this != null) from $message.getValueFromPart("customeraddress");
+		
+	
+    then
+	
+        
+	
+		ArrayList ListOfArtifact = new ArrayList<String>();
+		//ListOfArtifact.add("purchase_order");
+		
+		AccFactory factory = new AccFactory();		
+		SharedRuleInstance sharedruleInstance = factory.getSharedRuleInstance("purchase","r02-addPurchanseItem");
+	//	pc.startProcess(ListOfArtifact, "createOrderService","createOrder", ruleInstance,"order_process", $message.getMessage());
+	
+	//System.out.println("pass the test");
+	
+	//ArtifactManager.startProcess(ListOfArtifact, "seller", "OnlineOrderService","placeOrder", sharedruleInstance, "purchase", $message.getMessage());
+	
+	ArtifactManager.runProcess(ListOfArtifact,$message.getMessage() ,"seller","OnlineOrderService","addItem",sharedruleInstance,$message. getCoordinationId());
+	
+		
+end
+
+rule "r03-createPayment"
+   	
+    dialect "java"
+    when
+	
+
+	$Artifact: SharedArtifactChangeEvent()
+	SharedArtifactChangeEvent($item: getSharedArtifactData("purchase_order","order_item") != null)
+	SharedArtifactChangeEvent($total: getSharedArtifactData("purchase_order","grandtotal") != null)
+	SharedArtifactChangeEvent($state: getArtifactState("purchase_order") == "ready_for_payment")
+	//$name: MessageEvent(getValueFromPart("customername") != null)
+	//$address: MessageEvent(getValueFromPart("customeraddress")!= null)
+//	$name: String(this != null) from $message.getValueFromPart("customername");
+//	$address: String(this != null) from $message.getValueFromPart("customeraddress");
+		
+	
+    then
+	
+        
+	
+		ArrayList ListOfArtifact = new ArrayList<String>();
+		ListOfArtifact.add("purchase_payment");
+		
+		AccFactory factory = new AccFactory();		
+		SharedRuleInstance sharedruleInstance = factory.getSharedRuleInstance("purchase","r03-createPayment");
+	//	pc.startProcess(ListOfArtifact, "createOrderService","createOrder", ruleInstance,"order_process", $message.getMessage());
+	
+	//System.out.println("pass the test");
+	
+	//ArtifactManager.startProcess(ListOfArtifact, "seller", "OnlineOrderService","placeOrder", sharedruleInstance, "purchase", $message.getMessage());
+	
+	ArtifactManager.runProcess(ListOfArtifact, null ,"banker","OnlinePaymentService","makePayment",sharedruleInstance,$Artifact.getCoordinationInstance().getCoordinationId());
+	
+		
+end
+
+rule "r04-makePayment"
+   
+    dialect "java"
+    when
+	
+
+	$message: CombineEvent()
+	CombineEvent($creditcard_no: getValueFromPart("creditcard_no") != null)
+	 CombineEvent($ccv: getValueFromPart("ccv")!= null)
+	 CombineEvent($state: getArtifactState("purchase_payment")== "processing")
+		
+	
+    then
+	
+        
+	
+		ArrayList ListOfArtifact = new ArrayList<String>();
+		//ListOfArtifact.add("purchase_order");
+		
+		AccFactory factory = new AccFactory();		
+		SharedRuleInstance sharedruleInstance = factory.getSharedRuleInstance("purchase","r04-makePayment");
+	
+	//System.out.println("pass the test");
+	
+	//ArtifactManager.startProcess(ListOfArtifact, "seller", "OnlineOrderService","placeOrder", sharedruleInstance, "purchase", $message.getMessage());
+	
+	ArtifactManager.runProcess(ListOfArtifact,$message.getMessage() ,"banker","OnlinePaymentService","payViaCreditCard",sharedruleInstance,$message. getCoordinationId());
+	
+		
+end
+
+rule "r05-confirmPaymentToSeller"
+   	
+    dialect "java"
+    when
+	
+
+	$Artifact: SharedArtifactChangeEvent()
+	SharedArtifactChangeEvent($amontpaid: getSharedArtifactData("purchase_payment","amountpaid") != null)
+	SharedArtifactChangeEvent($paiddate: getSharedArtifactData("purchase_payment","paid_date") != null)
+	SharedArtifactChangeEvent($paymentstate: getArtifactState("purchase_payment") == "paid")
+	SharedArtifactChangeEvent($orderstate: getArtifactState("purchase_order") == "ready_to process_order_item")
+	//$name: MessageEvent(getValueFromPart("customername") != null)
+	//$address: MessageEvent(getValueFromPart("customeraddress")!= null)
+//	$name: String(this != null) from $message.getValueFromPart("customername");
+//	$address: String(this != null) from $message.getValueFromPart("customeraddress");
+		
+	
+    then
+	
+        
+	
+		ArrayList ListOfArtifact = new ArrayList<String>();
+		//ListOfArtifact.add("purchase_payment");
+		
+		AccFactory factory = new AccFactory();		
+		SharedRuleInstance sharedruleInstance = factory.getSharedRuleInstance("purchase","r05-confirmPaymentToSeller");
+	//	pc.startProcess(ListOfArtifact, "createOrderService","createOrder", ruleInstance,"order_process", $message.getMessage());
+	
+	//System.out.println("pass the test");
+	
+	//ArtifactManager.startProcess(ListOfArtifact, "seller", "OnlineOrderService","placeOrder", sharedruleInstance, "purchase", $message.getMessage());
+	
+	ArtifactManager.runProcess(ListOfArtifact, null ,"seller","OnlineOrderService","confirmPayment",sharedruleInstance,$Artifact.getCoordinationInstance().getCoordinationId());
+	
+		
+end

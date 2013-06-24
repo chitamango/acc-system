@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<log coordination_id="purchase-P1">
+<record no="1">
+<timestamp>Oct 21, 2012 4:42:22 PM</timestamp>
+<ruleId>r01-createPurchanseOrder:R1</ruleId>
+<roleId>seller-OnlineOrderService:R1</roleId>
+<pre_sharedartifact>
+<purchase_order id="" state="init">
+<id>null</id>
+<customer>null</customer>
+<order_item>null</order_item>
+<grandtotal>null</grandtotal>
+<completed_date>null</completed_date>
+</purchase_order>
+</pre_sharedartifact>
+<post_sharedartifact>
+<purchase_order id="purchase_order:order2012/10/21 16:42:23" state="created">
+<id>order2012/10/21 16:42:23</id>
+<customer>Kan Ngamakeur</customer>
+<order_item>null</order_item>
+<grandtotal>null</grandtotal>
+<completed_date>null</completed_date>
+</purchase_order>
+</post_sharedartifact>
+</record>
+<record no="2">
+<timestamp>Oct 21, 2012 4:42:33 PM</timestamp>
+<ruleId>r02-addPurchanseItem:R2</ruleId>
+<roleId>seller-OnlineOrderService:R2</roleId>
+<pre_sharedartifact>
+<purchase_order id="purchase_order:order2012/10/21 16:42:23" state="created">
+<id>order2012/10/21 16:42:23</id>
+<customer>Kan Ngamakeur</customer>
+<order_item>null</order_item>
+<grandtotal>null</grandtotal>
+<completed_date>null</completed_date>
+</purchase_order>
+</pre_sharedartifact>
+<post_sharedartifact>
+<purchase_order id="purchase_order:order2012/10/21 16:42:23" state="ready_for_payment">
+<id>order2012/10/21 16:42:23</id>
+<customer>Kan Ngamakeur</customer>
+<order_item>iphone5</order_item>
+<grandtotal>1200.0</grandtotal>
+<completed_date>null</completed_date>
+</purchase_order>
+</post_sharedartifact>
+</record>
+<record no="3">
+<timestamp>Oct 21, 2012 4:42:37 PM</timestamp>
+<ruleId>r03-createPayment:R3</ruleId>
+<roleId>banker-OnlinePaymentService:R3</roleId>
+<pre_sharedartifact>
+<purchase_order id="purchase_order:order2012/10/21 16:42:23" state="ready_for_payment">
+<id>order2012/10/21 16:42:23</id>
+<customer>Kan Ngamakeur</customer>
+<order_item>iphone5</order_item>
+<grandtotal>1200.0</grandtotal>
+<completed_date>null</completed_date>
+</purchase_order>
+<purchase_payment id="" state="init">
+<id>null</id>
+<customer>null</customer>
+<grandtotal>null</grandtotal>
+<paid_date>null</paid_date>
+<amountpaid>null</amountpaid>
+</purchase_payment>
+</pre_sharedartifact>
+<post_sharedartifact>
+<purchase_order id="purchase_order:order2012/10/21 16:42:23" state="waiting_payment_confirm">
+<id>order2012/10/21 16:42:23</id>
+<customer>Kan Ngamakeur</customer>
+<order_item>iphone5</order_item>
+<grandtotal>1200.0</grandtotal>
+<completed_date>null</completed_date>
+</purchase_order>
+<purchase_payment id="purchase_payment:1111" state="processing">
+<id>1111</id>
+<customer>Kan Ngamakeur</customer>
+<grandtotal>1200.0</grandtotal>
+<paid_date>null</paid_date>
+<amountpaid>null</amountpaid>
+</purchase_payment>
+</post_sharedartifact>
+</record>
+<record no="4">
+<timestamp>Oct 21, 2012 4:42:58 PM</timestamp>
+<ruleId>r04-makePayment:R4</ruleId>
+<roleId>banker-OnlinePaymentService:R4</roleId>
+<pre_sharedartifact>
+<purchase_order id="purchase_order:order2012/10/21 16:42:23" state="waiting_payment_confirm">
+<id>order2012/10/21 16:42:23</id>
+<customer>Kan Ngamakeur</customer>
+<order_item>iphone5</order_item>
+<grandtotal>1200.0</grandtotal>
+<completed_date>null</completed_date>
+</purchase_order>
+<purchase_payment id="purchase_payment:1111" state="processing">
+<id>1111</id>
+<customer>Kan Ngamakeur</customer>
+<grandtotal>1200.0</grandtotal>
+<paid_date>null</paid_date>
+<amountpaid>null</amountpaid>
+</purchase_payment>
+</pre_sharedartifact>
+<post_sharedartifact>
+<purchase_order id="purchase_order:order2012/10/21 16:42:23" state="ready_to process_order_item">
+<id>order2012/10/21 16:42:23</id>
+<customer>Kan Ngamakeur</customer>
+<order_item>iphone5</order_item>
+<grandtotal>1200.0</grandtotal>
+<completed_date>null</completed_date>
+</purchase_order>
+<purchase_payment id="purchase_payment:1111" state="paid">
+<id>1111</id>
+<customer>Kan Ngamakeur</customer>
+<grandtotal>1200.0</grandtotal>
+<paid_date>Oct 21, 2012 4:43:02 PM</paid_date>
+<amountpaid>1200.0</amountpaid>
+</purchase_payment>
+</post_sharedartifact>
+</record>
+<record no="5">
+<timestamp>Oct 21, 2012 4:43:05 PM</timestamp>
+<ruleId>r05-confirmPaymentToSeller:R5</ruleId>
+<roleId>seller-OnlineOrderService:R5</roleId>
+<pre_sharedartifact>
+<purchase_order id="purchase_order:order2012/10/21 16:42:23" state="ready_to process_order_item">
+<id>order2012/10/21 16:42:23</id>
+<customer>Kan Ngamakeur</customer>
+<order_item>iphone5</order_item>
+<grandtotal>1200.0</grandtotal>
+<completed_date>null</completed_date>
+</purchase_order>
+<purchase_payment id="purchase_payment:1111" state="paid">
+<id>1111</id>
+<customer>Kan Ngamakeur</customer>
+<grandtotal>1200.0</grandtotal>
+<paid_date>Oct 21, 2012 4:43:02 PM</paid_date>
+<amountpaid>1200.0</amountpaid>
+</purchase_payment>
+</pre_sharedartifact>
+<post_sharedartifact>
+<purchase_order id="purchase_order:order2012/10/21 16:42:23" state="order_completed">
+<id>order2012/10/21 16:42:23</id>
+<customer>Kan Ngamakeur</customer>
+<order_item>iphone5</order_item>
+<grandtotal>1200.0</grandtotal>
+<completed_date>Oct 21, 2012 4:43:09 PM</completed_date>
+</purchase_order>
+<purchase_payment id="purchase_payment:1111" state="paid">
+<id>1111</id>
+<customer>Kan Ngamakeur</customer>
+<grandtotal>1200.0</grandtotal>
+<paid_date>Oct 21, 2012 4:43:02 PM</paid_date>
+<amountpaid>1200.0</amountpaid>
+</purchase_payment>
+</post_sharedartifact>
+</record>
+</log>

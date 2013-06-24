@@ -1,0 +1,276 @@
+<coordination xmlns="http://www.swin.edu.au" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.swin.edu.au AccSchema.xsd" name = "purchase">
+	<shared_artifacts>
+		<shared_artifact name = "purchase_order" >
+			<attributes>
+				<attribute name = "id" type ="string" structure = "pair" unique_id = "yes" />
+				<attribute name = "customer" type ="string" structure = "pair"/>
+				<attribute name = "order_item" type ="string" structure = "pair"/>
+				<attribute name = "grandtotal" type ="string" structure = "pair"/>
+				<attribute name = "completed_date" type ="string" structure = "pair"/>
+			</attributes>
+			<shared_states>
+				<state name = "init" type = "init"/>
+				<state name = "created" />	
+				<state name = "ready_for_payment" />	
+				<state name = "waiting_payment_confirm" />	
+				<state name = "ready_to process_order_item" />
+				<state name = "order_completed" type = "end" />	
+			</shared_states>
+		</shared_artifact>
+		<shared_artifact name = "purchase_payment" >
+			<attributes>
+				<attribute name = "id" type ="string" structure = "pair" unique_id = "yes" />
+				<attribute name = "customer" type ="string" structure = "pair"/>
+				<attribute name = "grandtotal" type ="string" structure = "pair"/>
+				<attribute name = "paid_date" type ="string" structure = "pair"/>
+				<attribute name = "amountpaid" type ="double" structure = "pair"/>
+			</attributes>
+			<shared_states>
+				<state name = "init" type = "init"/>	
+				<state name = "processing" />		
+				<state name = "paid" type = "end"/>
+			</shared_states>
+		</shared_artifact>
+		<shared_artifact name = "purchase_delivery" >
+			<attributes>
+				<attribute name = "id" type ="string" structure = "pair" unique_id = "yes" />
+				<attribute name = "customer" type ="string" structure = "pair"/>
+				<attribute name = "address" type ="string" structure = "pair"/>
+				<attribute name = "start_date" type ="string" structure = "pair"/>
+				<attribute name = "end_date" type ="double" structure = "pair"/>
+			</attributes>
+			<shared_states>
+				<state name = "init" type = "init"/>	
+				<state name = "scheduled" />		
+				<state name = "on_board_to_destination" type = "end"/>
+				<state name = "delivered" type = "end"/>
+			</shared_states>
+		</shared_artifact>
+	
+	</shared_artifacts>
+	<shared_rules>
+		<shared_rule name ="r01-createPurchanseOrder">
+			<onevent type = "messageReceivedEvent" />
+			<pre_con> 
+				<and>			
+					<atom type = "part" shared_artifact = "purchase_order"  attibute_name = "id" operator = "!=" value = "null" />
+					<atom type = "part" shared_artifact = "purchase_order"  attibute_name = "customer" operator = "!=" value = "null" /> 
+					<atom type="state" shared_artifact = "purchase_order" value="init"  /> 
+				</and>
+			
+			</pre_con>
+			<do>
+				<invoke role = "seller" service = "OnlineOrderService" operation = "placeOrder" >
+					<mapping>
+						<coordination>
+							<map>
+								<from type = "message" name = "OrderRequest" part = "customername"  />
+								<to type = "message" name = "placeOrderRequest" part = "cust_name" /> <!-- this looks strange -->
+							</map>
+							<map>
+								<from type = "message" name = "OrderRequest" part = "customeraddress"  />
+								<to type = "message" name = "placeOrderRequest" part = "cust_address" /> <!-- this looks strange -->
+							</map>
+				
+						</coordination>
+						<notification> 
+							<map>
+								<from type = "local_artifact" name = "order" attribute = "orderId" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "id"   />
+							</map>
+							<map>
+								<from type = "local_artifact" name = "order" attribute = "customername" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "customer"   />
+							</map>
+						</notification> 
+					</mapping>
+					<transitions>
+						<transition shared_artifact = "purchase_order" fromState = "init" toState = "created" />
+					</transitions>	
+				</invoke>	
+			</do>
+		</shared_rule>
+		<shared_rule name ="r02-addPurchanseItem">
+			<onevent type = "messageReceivedEvent" />
+			<pre_con> 
+				<and>			
+					<atom type = "part" shared_artifact = "purchase_order"  attibute_name = "id" operator = "!=" value = "null" />
+					<atom type = "part" shared_artifact = "purchase_order"  attibute_name = "customer" operator = "!=" value = "null" /> 
+					<atom type="state" shared_artifact = "purchase_order" value="init"  /> 
+				</and>
+			
+			</pre_con>
+			<do>
+				<invoke role = "seller" service = "OnlineOrderService" operation = "addItem" >
+					<mapping>
+						<coordination>
+							<map>
+								<from type = "message" name = "AddPurchaseItemRequest" part = "item"  />
+								<to type = "message" name = "addItemRequest" part = "item" /> <!-- this looks strange -->
+							</map>
+							<map>
+								<from type = "message" name = "AddPurchaseItemRequest" part = "quantity"  />
+								<to type = "message" name = "addItemRequest" part = "quantity" /> <!-- this looks strange -->
+							</map>
+				
+						</coordination>
+						<notification> 
+							<map>
+								<from type = "local_artifact" name = "order" attribute = "orderItem" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "order_item"   />
+							</map>
+							<map>
+								<from type = "local_artifact" name = "order" attribute = "grand_total" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "grandtotal"   />
+							</map>
+						</notification> 
+					</mapping>
+					<transitions>
+						<transition shared_artifact = "purchase_order" fromState = "created" toState = "ready_for_payment" />
+					</transitions>	
+				</invoke>	
+			</do>
+		</shared_rule>
+		<shared_rule name ="r03-createPayment">
+			<onevent type = "artifactChangedEvent" />
+			<pre_con> 
+				<and>			
+					<atom type = "part" shared_artifact = "purchase_order"  attibute_name = "id" operator = "!=" value = "null" />
+					<atom type = "part" shared_artifact = "purchase_order"  attibute_name = "customer" operator = "!=" value = "null" /> 
+					<atom type="state" shared_artifact = "purchase_order" value="init"  /> 
+				</and>
+			
+			</pre_con>
+			<do>
+				<invoke role = "banker" service = "OnlinePaymentService" operation = "makePayment" >
+					<mapping>
+						<coordination>
+							<map>
+								<from type = "shared_artifact" name = "purchase_order" attribute = "customer"  />
+								<to type = "message" name = "makePaymentRequest" part = "customer_name" /> <!-- this looks strange --> 
+							</map>
+							<map>
+								<from type = "shared_artifact" name = "purchase_order" attribute = "grandtotal"  />
+								<to type = "message" name = "makePaymentRequest" part = "grand_total" /> <!-- this looks strange -->
+							</map>
+				
+						</coordination>
+						<notification> 
+							<map>
+								<from type = "local_artifact" name = "invoice" attribute = "invoiceId" />
+								<to type = "shared_artifact" name = "purchase_payment" attribute = "id"   />
+							</map>
+							<map>
+								<from type = "local_artifact" name = "invoice" attribute = "customerName" />
+								<to type = "shared_artifact" name = "purchase_payment" attribute = "customer"   />
+							</map>
+							<map>
+								<from type = "local_artifact" name = "invoice" attribute = "grand_total" />
+								<to type = "shared_artifact" name = "purchase_payment" attribute = "grandtotal"   />
+							</map>
+						</notification> 
+					</mapping>
+					<transitions>
+						<transition shared_artifact = "purchase_payment" fromState = "init" toState = "processing" />
+						<transition shared_artifact = "purchase_order" fromState = "ready_for_payment" toState = "waiting_payment_confirm" />
+					</transitions>	
+				</invoke>	
+			</do>
+		</shared_rule>
+		<shared_rule name ="r04-makePayment">
+			<onevent type = "messageReceivedEvent" />
+			<pre_con> 
+				<and>			
+					<atom type = "part" shared_artifact = "purchase_order"  attibute_name = "id" operator = "!=" value = "null" />
+					<atom type = "part" shared_artifact = "purchase_order"  attibute_name = "customer" operator = "!=" value = "null" /> 
+					<atom type="state" shared_artifact = "purchase_order" value="init"  /> 
+				</and>
+			
+			</pre_con>
+			<do>
+				<invoke role = "banker" service = "OnlinePaymentService" operation = "payViaCreditCard" >
+					<mapping>
+						<coordination>
+							<map>
+								<from type = "message" name = "makePaymentRequest" part = "creditcard_no"  />
+								<to type = "message" name = "payViaCreditCardRequest" part = "creditcard_no" /> <!-- this looks strange --> 
+							</map>
+							<map>
+								<from type = "message" name = "makePaymentRequest" part = "ccv"  />
+								<to type = "message" name = "payViaCreditCardRequest" part = "ccv" /> <!-- this looks strange -->
+							</map>
+				
+						</coordination>
+						<notification> 
+							<map>
+								<from type = "local_artifact" name = "invoice" attribute = "amount_paid" />
+								<to type = "shared_artifact" name = "purchase_payment" attribute = "amountPaid"   />
+							</map>
+							<map>
+								<from type = "local_artifact" name = "invoice" attribute = "paid_date" />
+								<to type = "shared_artifact" name = "purchase_payment" attribute = "paid_date"   />
+							</map>
+							
+						</notification> 
+					</mapping>
+					<transitions>
+						<transition shared_artifact = "purchase_payment" fromState = "processing" toState = "paid" />
+						<transition shared_artifact = "purchase_order" fromState = "waiting_payment_confirm" toState = "ready_to process_order_item" />
+					</transitions>	
+				</invoke>	
+			</do>
+		</shared_rule>
+		<shared_rule name ="r05-confirmPaymentToSeller">
+			<onevent type = "artifactChangedEvent" />
+			<pre_con> 
+				<and>			
+					<atom type = "part" shared_artifact = "purchase_order"  attibute_name = "id" operator = "!=" value = "null" />
+					<atom type = "part" shared_artifact = "purchase_order"  attibute_name = "customer" operator = "!=" value = "null" /> 
+					<atom type="state" shared_artifact = "purchase_order" value="init"  /> 
+				</and>
+			
+			</pre_con>
+			<do>
+				<invoke role = "seller" service = "OnlineOrderService" operation = "confirmPayment" >
+					<mapping>
+						<coordination>
+							<map>
+								<from type = "shared_artifact" name = "purchase_order" attribute = "id"  />
+								<to type = "message" name = "confirmPaymentRequest" part = "orderId" /> <!-- this looks strange --> 
+							</map>
+							<map>
+								<from type = "shared_artifact" name = "purchase_payment" attribute = "amountpaid"  />
+								<to type = "message" name = "confirmPaymentRequest" part = "amountpaid" /> <!-- this looks strange -->
+							</map>
+				
+						</coordination>
+						<notification> 
+							<map>
+								<from type = "local_artifact" name = "order" attribute = "order_item_complete_date" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "completed_date"   />
+							</map>
+							
+							
+						</notification> 
+					</mapping>
+					<transitions>
+						<transition shared_artifact = "purchase_order" fromState = "ready_to process_order_item" toState = "order_completed" />
+					</transitions>	
+				</invoke>	
+			</do>
+		</shared_rule>
+	
+	</shared_rules>
+	
+	<roles>
+		<role name ="seller" role_location ="http://localhost:8080/axis2/services/SharedArtifactClientManagerService?wsdl" role_port ="SharedArtifactClientManagerServiceHttpSoap11Endpoint"  namespace ="http://online.test" >
+			<service name = "OnlineOrderService" location = "http://localhost:8080/axis2/services/OnlineOrderService?wsdl" operation = "placeOrder" port ="OnlineOrderServiceHttpSoap11Endpoint" inputmessage = "placeOrderRequest" outputmessage = "placeOrderResponse" />
+			<service name = "OnlineOrderService" location = "http://localhost:8080/axis2/services/OnlineOrderService?wsdl" operation = "addItem" port ="OnlineOrderServiceHttpSoap11Endpoint" inputmessage = "addItemRequest" outputmessage = "addItemResponse" />
+			<service name = "OnlineOrderService" location = "http://localhost:8080/axis2/services/OnlineOrderService?wsdl" operation = "confirmPayment" port ="OnlineOrderServiceHttpSoap11Endpoint" inputmessage = "confirmPaymentRequest" outputmessage = "confirmPaymentResponse" />
+		</role>
+		<role name ="banker" role_location ="http://localhost:8080/axis2/services/SharedArtifactClientManagerService?wsdl" role_port ="SharedArtifactClientManagerServiceHttpSoap11Endpoint"  namespace ="http://payment.test" >
+			<service name = "OnlinePaymentService" location = "http://localhost:8080/axis2/services/OnlinePaymentService?wsdl" operation = "makePayment" port ="OnlinePaymentServiceHttpSoap11Endpoint" inputmessage = "makePaymentRequest" outputmessage = "makePaymentResponse" />
+			<service name = "OnlinePaymentService" location = "http://localhost:8080/axis2/services/OnlinePaymentService?wsdl" operation = "payViaCreditCard" port ="OnlinePaymentServiceHttpSoap11Endpoint" inputmessage = "payViaCreditCardRequest" outputmessage = "payViaCreditCardResponse" />
+		</role>
+	</roles>
+</coordination>
