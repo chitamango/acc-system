@@ -208,11 +208,14 @@ public class SharedArtifactManager {
 		
 		Coordination.addRoleInstance(this.initialRoleWithId(Coordination, InvokedRole));
 			
-		Acclogger.createProcessLogRecord(Coordination.getCoordinationLog(), Coordination.getSharedArtifactInstanceList(), ExecutedSharedRule.getRuleId(), InvokedRole.getRoleID(), ExecutedSharedRule.getTimeStamp());
+		Acclogger.createProcessLogRecord(Coordination.getCoordinationLog(), Coordination.getSharedArtifactInstanceList(), ExecutedSharedRule.getRuleId(), InvokedRole.getRoleID() , ExecutedSharedRule.getTimeStamp());
+		//may have a condition to check whether a role need to be invoked
+		if(RoleName != "system")
+		{
 		
 		roleManager.invokeParticipatingRole(Coordination.getSharedArtifactInstanceList(), RequestMessage, RoleName, ServiceName, OperationName, ExecutedSharedRule, Coordination);
 		
-		
+		}
 		//update artifact 
 		
 		sharedArtifactDatamanager.updateSharedArtifact(Coordination.getSharedArtifactInstanceList(), InvokedRole.getNotificationMessage(), Coordination, ExecutedSharedRule);
@@ -299,7 +302,7 @@ public class SharedArtifactManager {
 	{
 		Integer RuleInstanceListSize = Coordination.getSharedRuleInstanceList().size();
 		
-		String GeneratedRuleID = SharedRule.getRuleName()+":R"+(RuleInstanceListSize+1);
+		String GeneratedRuleID =  "RL"+(RuleInstanceListSize+1)+":"+SharedRule.getRuleName();
 		
 		SharedRule.initialRuleInstance(GeneratedRuleID);
 		
@@ -313,7 +316,7 @@ public class SharedArtifactManager {
 	{
 		Integer RoleInstanceListSize = Coordination.getRoleInstanceList().size();
 		
-		String GeneratedRoleID = InvokedRole.getRole()+ "-"+ InvokedRole.getService() +":R"+((RoleInstanceListSize+1));
+		String GeneratedRoleID = "S"+(RoleInstanceListSize+1) +":"+ InvokedRole.getRole()+ "-"+ InvokedRole.getService() + "-" + InvokedRole.getOperation() ;
 		
 		InvokedRole.setRoleID(GeneratedRoleID);
 		
