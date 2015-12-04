@@ -31,7 +31,7 @@ import com.inter.process.SharedRuleType;
 
 public class AccFactory {
 	
-	private JAXBContext jaxbContext;
+	private JAXBContext  jaxbContext;
 	private  Unmarshaller unmarshaller;
 	
 	public AccFactory()

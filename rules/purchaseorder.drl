@@ -1,0 +1,304 @@
+package com.purchaseorder.com
+ 
+import com.inter.manager.SharedArtifactManager;
+import com.inter.instance.SharedArtifactInstance;
+import com.inter.instance.SharedAttributeInstance;
+import com.inter.instance.CoordinationInstance;
+import com.inter.instance.SharedRuleInstance;
+import com.inter.instance.RoleInstance;
+//import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList; 
+import com.inter.factory.AccFactory;
+import org.apache.axiom.om.OMElement;
+import javax.xml.namespace.QName;
+import com.inter.event.MessageEvent;
+import com.inter.event.SharedArtifactChangeEvent;
+import com.inter.event.CombineEvent;
+
+
+global com.inter.manager.SharedArtifactManager ArtifactManager;
+ 
+rule "r01-createPOprocess"
+   
+    dialect "java"
+    when
+	
+//need to think about condition and webservice interface that to invoke this rule
+	$message: MessageEvent()
+	MessageEvent($supplierId: getValueFromPart("supplierId") != null)
+	 MessageEvent($productItem: getValueFromPart("productItem")!= null)
+	 MessageEvent($quantity: getValueFromPart("quantity")!= null)
+	//$name: MessageEvent(getValueFromPart("customername") != null)
+	//$address: MessageEvent(getValueFromPart("customeraddress")!= null)
+//	$name: String(this != null) from $message.getValueFromPart("customername");
+//	$address: String(this != null) from $message.getValueFromPart("customeraddress");
+		
+	
+    then
+	
+        
+	
+		ArrayList ListOfArtifact = new ArrayList<String>();
+		ListOfArtifact.add("purchase_order");
+		
+		AccFactory factory = new AccFactory();		
+		SharedRuleInstance sharedruleInstance = factory.getSharedRuleInstance("purchase-process","r01-createPOprocess");
+	
+	
+	ArtifactManager.startProcess(ListOfArtifact, "buyer", "BuyerServiceInterface","createPO", sharedruleInstance, "purchase-process", $message.getMessage());
+	
+	
+		
+end
+
+rule "r16-waitingforconfirmation"
+   	
+    dialect "java"
+    when
+	
+
+	$Artifact: SharedArtifactChangeEvent()
+	SharedArtifactChangeEvent($orderId: getSharedArtifactData("purchase_order","orderId") != null)
+	SharedArtifactChangeEvent($supplierId: getSharedArtifactData("purchase_order","supplierId") != null)
+	SharedArtifactChangeEvent($submittedDate: getSharedArtifactData("purchase_order","summittedDate") != null)
+	SharedArtifactChangeEvent($productItem: getSharedArtifactData("purchase_order","productItem") != null)
+	SharedArtifactChangeEvent($quantity: getSharedArtifactData("purchase_order","quantity") != null)
+	SharedArtifactChangeEvent($state: getArtifactState("purchase_order") == "created")
+	//$name: MessageEvent(getValueFromPart("customername") != null)
+	//$address: MessageEvent(getValueFromPart("customeraddress")!= null)
+//	$name: String(this != null) from $message.getValueFromPart("customername");
+//	$address: String(this != null) from $message.getValueFromPart("customeraddress");
+		
+	
+    then
+	
+        
+	
+		ArrayList ListOfArtifact = new ArrayList<String>();
+		//ListOfArtifact.add("purchase_payment");
+		
+		AccFactory factory = new AccFactory();		
+		SharedRuleInstance sharedruleInstance = factory.getSharedRuleInstance("purchase-process","r16-waitingforconfirmation");
+	//	pc.startProcess(ListOfArtifact, "createOrderService","createOrder", ruleInstance,"order_process", $message.getMessage());
+	
+	//System.out.println("pass the test");
+	
+	//ArtifactManager.startProcess(ListOfArtifact, "seller", "OnlineOrderService","placeOrder", sharedruleInstance, "purchase", $message.getMessage());
+	
+	ArtifactManager.runProcess(ListOfArtifact, null ,"system","selfTransistionService","stateTransist",sharedruleInstance,$Artifact.getCoordinationInstance().getCoordinationId());
+	
+		
+end
+
+rule "r2-confirmationPO"
+   	
+    dialect "java"
+    when
+	
+
+	$message: CombineEvent()
+	CombineEvent($process_id: getValueFromPart("process_id") != null)
+	 CombineEvent($status: getValueFromPart("status")== "confirm")
+	 CombineEvent($state: getArtifactState("purchase_order")== "on_hold")
+	 CombineEvent($submitted_date: getSharedArtifactData("purchase_order","summittedDate")!= null)
+		
+	
+    then
+	
+        
+	
+		ArrayList ListOfArtifact = new ArrayList<String>();
+		//ListOfArtifact.add("purchase_payment");
+		
+		AccFactory factory = new AccFactory();		
+		SharedRuleInstance sharedruleInstance = factory.getSharedRuleInstance("purchase-process","r2-confirmationPO");
+	//	pc.startProcess(ListOfArtifact, "createOrderService","createOrder", ruleInstance,"order_process", $message.getMessage());
+	
+	//System.out.println("pass the test");
+	
+	//ArtifactManager.startProcess(ListOfArtifact, "seller", "OnlineOrderService","placeOrder", sharedruleInstance, "purchase", $message.getMessage());
+	
+	ArtifactManager.runProcess(ListOfArtifact, $message.getMessage() ,"buyer","BuyerServiceInterface","confirmPO",sharedruleInstance,$message. getCoordinationId());
+	
+		
+end
+
+rule "r3-cancellationPO"
+   	
+    dialect "java"
+    when
+	
+
+	$message: CombineEvent()
+	CombineEvent($process_id: getValueFromPart("process_id") != null)
+	 CombineEvent($status: getValueFromPart("status")== "cancel")
+	 CombineEvent($state: getArtifactState("purchase_order")== "on_hold")
+	 CombineEvent($submitted_date: getSharedArtifactData("purchase_order","summittedDate")!= null)
+		
+	
+    then
+	
+        
+	
+		ArrayList ListOfArtifact = new ArrayList<String>();
+		//ListOfArtifact.add("purchase_payment");
+		
+		AccFactory factory = new AccFactory();		
+		SharedRuleInstance sharedruleInstance = factory.getSharedRuleInstance("purchase-process","r3-cancellationPO");
+	//	pc.startProcess(ListOfArtifact, "createOrderService","createOrder", ruleInstance,"order_process", $message.getMessage());
+	
+	//System.out.println("pass the test");
+	
+	//ArtifactManager.startProcess(ListOfArtifact, "seller", "OnlineOrderService","placeOrder", sharedruleInstance, "purchase", $message.getMessage());
+	
+	ArtifactManager.runProcess(ListOfArtifact, $message.getMessage() ,"buyer","BuyerServiceInterface","cancelPO",sharedruleInstance,$message. getCoordinationId());
+	
+		
+end
+
+rule "r4-receivePO"
+   	
+    dialect "java"
+    when
+	
+
+	$Artifact: SharedArtifactChangeEvent()
+	SharedArtifactChangeEvent($confirmedDate: getSharedArtifactData("purchase_order","confirmedDate") != null)
+	SharedArtifactChangeEvent($state: getArtifactState("purchase_order") == "confirmed")
+	//$name: MessageEvent(getValueFromPart("customername") != null)
+	//$address: MessageEvent(getValueFromPart("customeraddress")!= null)
+//	$name: String(this != null) from $message.getValueFromPart("customername");
+//	$address: String(this != null) from $message.getValueFromPart("customeraddress");
+		
+	
+    then
+	
+        
+	
+		ArrayList ListOfArtifact = new ArrayList<String>();
+		//ListOfArtifact.add("purchase_payment");
+		
+		AccFactory factory = new AccFactory();		
+		SharedRuleInstance sharedruleInstance = factory.getSharedRuleInstance("purchase-process","r4-receivePO");
+	//	pc.startProcess(ListOfArtifact, "createOrderService","createOrder", ruleInstance,"order_process", $message.getMessage());
+	
+	//System.out.println("pass the test");
+	
+	//ArtifactManager.startProcess(ListOfArtifact, "seller", "OnlineOrderService","placeOrder", sharedruleInstance, "purchase", $message.getMessage());
+	
+	ArtifactManager.runProcess(ListOfArtifact, null ,"supplier","SupplierServiceInterface","receivePO",sharedruleInstance,$Artifact.getCoordinationInstance().getCoordinationId());
+	
+		
+end
+
+rule "r15-acquirePO"
+   	
+    dialect "java"
+    when
+	
+
+	$Artifact: SharedArtifactChangeEvent()
+	SharedArtifactChangeEvent($orderId: getSharedArtifactData("purchase_order","stockcheckingDate") != null)
+	SharedArtifactChangeEvent($supplierId: getSharedArtifactData("purchase_order","current_stock") != null)
+	SharedArtifactChangeEvent($state: getArtifactState("purchase_order") == "accepted")
+	//$name: MessageEvent(getValueFromPart("customername") != null)
+	//$address: MessageEvent(getValueFromPart("customeraddress")!= null)
+//	$name: String(this != null) from $message.getValueFromPart("customername");
+//	$address: String(this != null) from $message.getValueFromPart("customeraddress");
+		
+	
+    then
+	
+        
+	
+		ArrayList ListOfArtifact = new ArrayList<String>();
+		//ListOfArtifact.add("purchase_payment");
+		
+		AccFactory factory = new AccFactory();		
+		SharedRuleInstance sharedruleInstance = factory.getSharedRuleInstance("purchase-process","r15-acquirePO");
+	//	pc.startProcess(ListOfArtifact, "createOrderService","createOrder", ruleInstance,"order_process", $message.getMessage());
+	
+	//System.out.println("pass the test");
+	
+	//ArtifactManager.startProcess(ListOfArtifact, "seller", "OnlineOrderService","placeOrder", sharedruleInstance, "purchase", $message.getMessage());
+	
+	ArtifactManager.runProcess(ListOfArtifact, null ,"system","selfTransistionService","stateTransist",sharedruleInstance,$Artifact.getCoordinationInstance().getCoordinationId());
+	
+		
+end
+
+rule "r5-cancelPO_outOfStock"
+   	
+    dialect "java"
+    when
+	
+
+	$Artifact: SharedArtifactChangeEvent()
+	//SharedArtifactChangeEvent($orderId: getSharedArtifactData("purchase_order","stockcheckingDate") != null)
+	//SharedArtifactChangeEvent($supplierId: getSharedArtifactData("purchase_order","current_stock") != null)
+	SharedArtifactChangeEvent($current_stock: getSharedArtifactData("purchase_order","current_stock") < $quantity: getSharedArtifactData("purchase_order","quantity"))
+	SharedArtifactChangeEvent($state: getArtifactState("purchase_order") == "acquiring")
+	//$name: MessageEvent(getValueFromPart("customername") != null)
+	//$address: MessageEvent(getValueFromPart("customeraddress")!= null)
+//	$name: String(this != null) from $message.getValueFromPart("customername");
+//	$address: String(this != null) from $message.getValueFromPart("customeraddress");
+		
+	
+    then
+	
+        
+	
+		ArrayList ListOfArtifact = new ArrayList<String>();
+		//ListOfArtifact.add("purchase_payment");
+		
+		AccFactory factory = new AccFactory();		
+		SharedRuleInstance sharedruleInstance = factory.getSharedRuleInstance("purchase-process","r5-cancelPO_outOfStock");
+	//	pc.startProcess(ListOfArtifact, "createOrderService","createOrder", ruleInstance,"order_process", $message.getMessage());
+	
+	//System.out.println("pass the test");
+	
+	//ArtifactManager.startProcess(ListOfArtifact, "seller", "OnlineOrderService","placeOrder", sharedruleInstance, "purchase", $message.getMessage());
+	
+	ArtifactManager.runProcess(ListOfArtifact, null ,"supplier","SupplierServiceInterface","cancelOutOfStockPO",sharedruleInstance,$Artifact.getCoordinationInstance().getCoordinationId());
+	
+		
+end
+
+rule "r6-fulfillPO"
+   	
+    dialect "java"
+    when
+	
+
+	$Artifact: SharedArtifactChangeEvent()
+	//SharedArtifactChangeEvent($orderId: getSharedArtifactData("purchase_order","stockcheckingDate") != null)
+	//SharedArtifactChangeEvent($supplierId: getSharedArtifactData("purchase_order","current_stock") != null)
+	SharedArtifactChangeEvent($current_stock: getSharedArtifactData("purchase_order","current_stock") >= $quantity: getSharedArtifactData("purchase_order","quantity"))
+	SharedArtifactChangeEvent($state: getArtifactState("purchase_order") == "acquiring")
+	//$name: MessageEvent(getValueFromPart("customername") != null)
+	//$address: MessageEvent(getValueFromPart("customeraddress")!= null)
+//	$name: String(this != null) from $message.getValueFromPart("customername");
+//	$address: String(this != null) from $message.getValueFromPart("customeraddress");
+		
+	
+    then
+	
+        
+	
+		ArrayList ListOfArtifact = new ArrayList<String>();
+		//ListOfArtifact.add("purchase_payment");
+		
+		AccFactory factory = new AccFactory();		
+		SharedRuleInstance sharedruleInstance = factory.getSharedRuleInstance("purchase-process","r6-fulfillPO");
+	//	pc.startProcess(ListOfArtifact, "createOrderService","createOrder", ruleInstance,"order_process", $message.getMessage());
+	
+	//System.out.println("pass the test");
+	
+	//ArtifactManager.startProcess(ListOfArtifact, "seller", "OnlineOrderService","placeOrder", sharedruleInstance, "purchase", $message.getMessage());
+	
+	ArtifactManager.runProcess(ListOfArtifact, null ,"supplier","SupplierServiceInterface","fulfillPO",sharedruleInstance,$Artifact.getCoordinationInstance().getCoordinationId());
+	
+		
+end
+
+

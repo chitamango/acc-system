@@ -1,0 +1,401 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coordination xmlns="http://www.swin.edu.au" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.swin.edu.au AccSchema.xsd" name = "purchase-process">
+	<shared_artifacts>
+		<shared_artifact name = "purchase_order" >
+			<attributes>
+				<attribute name = "orderId" type ="string" structure = "pair" unique_id = "yes" />
+				<attribute name = "supplierId" type ="string" structure = "pair"/>
+				<attribute name = "summittedDate" type ="string" structure = "pair"/>
+				<attribute name = "confirmedDate" type ="string" structure = "pair"/>
+				<attribute name = "cancelledDate" type ="string" structure = "pair"/>
+				<attribute name = "filledDate" type ="string" structure = "pair"/>
+				<attribute name = "productItem" type ="string" structure = "pair"/>
+				<attribute name = "quantity" type ="string" structure = "pair"/>
+				<attribute name = "filledQuantity" type ="string" structure = "pair"/>
+				<attribute name = "subTotal" type ="string" structure = "pair"/>
+				<attribute name = "tax" type ="string" structure = "pair"/>
+				<attribute name = "total" type ="string" structure = "pair"/>
+				<attribute name = "current_stock" type ="string" structure = "pair"/>
+				<attribute name = "stockcheckingDate" type ="string" structure = "pair"/>
+			</attributes>
+			<shared_states>
+				<state name = "init" type = "init"/>
+				<state name = "created" />	
+				<state name = "on_hold" />
+				<state name = "confirmed" />	
+				<state name = "accepted" />
+				<state name = "acquiring" />			
+				<state name = "filled" />	
+				<state name = "ready_to_ship" />
+				<state name = "delivery" />
+				<state name = "billing" />		
+				<state name = "closed" type = "end" />	
+				<state name = "cancelled" type = "end" />	
+			</shared_states>
+		</shared_artifact>
+		<shared_artifact name = "shipping_order" >
+			<attributes>
+				<attribute name = "shippingID" type ="string" structure = "pair" unique_id = "yes" />
+				<attribute name = "shipperName" type ="string" structure = "pair"/>
+				<attribute name = "scheduledDateTime" type ="string" structure = "pair"/>
+				<attribute name = "shippedDateTime" type ="string" structure = "pair"/>
+				<attribute name = "arrivedDateTime" type ="string" structure = "pair"/>
+				<attribute name = "shippingNote" type ="string" structure = "pair"/>
+				<attribute name = "shippingAddress" type ="string" structure = "pair"/>
+				<attribute name = "totalWeight" type ="string" structure = "pair"/>
+			</attributes>
+			<shared_states>
+				<state name = "init" type = "init"/>	
+				<state name = "created" />
+				<state name = "scheduled" />
+				<state name = "in_transit" />
+				<state name = "arrived" type = "end"/>
+			</shared_states>
+		</shared_artifact>
+		<shared_artifact name = "invoice" >
+			<attributes>
+				<attribute name = "invoiceID" type ="string" structure = "pair" unique_id = "yes" />
+				<attribute name = "invoiceDate" type ="string" structure = "pair"/>
+				<attribute name = "term" type ="string" structure = "pair"/>
+				<attribute name = "amount" type ="string" structure = "pair"/>
+				<attribute name = "currency" type ="string" structure = "pair"/>
+				<attribute name = "clearAmount" type ="tring" structure = "pair"/>
+				<attribute name = "clearDate" type ="string" structure = "pair"/>
+			</attributes>
+			<shared_states>
+				<state name = "init" type = "init"/>	
+				<state name = "issued" />		
+				<state name = "sent" />
+				<state name = "unpaid" />
+				<state name = "clearing" />
+				<state name = "on_board_to_destination" type = "end"/>
+				<state name = "delivered" type = "end"/>
+			</shared_states>
+		</shared_artifact>
+	
+	</shared_artifacts>
+	<shared_rules>
+		<shared_rule name ="r01-createPOprocess">
+			<onevent type = "messageReceivedEvent" />
+			<pre_con> 
+				<and>			
+					<atom type = "part" message = "makePurchaseRequest"  part = "supplierId" operator = "!=" value = "null" />
+					<atom type = "part" message = "makePurchaseRequest"  part = "productItem" operator = "!=" value = "null" /> 
+					<atom type = "part" message = "makePurchaseRequest"  part = "quantity" operator = "!=" value = "null" /> 
+				</and>
+			
+			</pre_con>
+			<do>
+				<invoke role = "buyer" service = "BuyerServiceInterface" operation = "createPO" >
+					<mapping>
+						<coordination>
+							<map>
+								<from type = "message" name = "makePurchaseRequest" part = "supplierId"  />
+								<to type = "message" name = "createPORequest" part = "supplierId" /> 
+							</map>
+							<map>
+								<from type = "message" name = "makePurchaseRequest" part = "productItem"  />
+								<to type = "message" name = "createPORequest" part = "productItem" />
+							</map>
+							<map>
+								<from type = "message" name = "makePurchaseRequest" part = "quantity"  />
+								<to type = "message" name = "createPORequest" part = "quantity" />
+							</map>
+						</coordination>
+						<notification> 
+							<map>
+								<from type = "local_artifact" name = "quote" attribute = "quoteId" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "orderId"   />
+							</map>
+							<map>
+								<from type = "local_artifact" name = "quote" attribute = "supplierId" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "supplierId"   />
+							</map>
+							<map>
+								<from type = "local_artifact" name = "quote" attribute = "submittedDate" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "summittedDate"   />
+							</map>
+							<map>
+								<from type = "local_artifact" name = "quote" attribute = "productItem" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "productItem"   />
+							</map>
+							<map>
+								<from type = "local_artifact" name = "quote" attribute = "quantity" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "quantity"   />
+							</map>
+						</notification> 
+					</mapping>
+					<transitions>
+						<transition shared_artifact = "purchase_order" fromState = "init" toState = "created" />
+					</transitions>	
+				</invoke>	
+			</do>
+		</shared_rule>
+		<shared_rule name ="r16-waitingforconfirmation">
+			<onevent type = "artifactChangedEvent" />
+			<pre_con> 
+				<and>			
+					<atom type = "part" shared_artifact = "purchase_order"  attibute_name = "id" operator = "!=" value = "null" />
+					<atom type = "part" shared_artifact = "purchase_order"  attibute_name = "customer" operator = "!=" value = "null" /> 
+					<atom type="state" shared_artifact = "purchase_order" value="init"  /> 
+				</and>
+			
+			</pre_con>
+			<do>
+				<invoke role = "system" service = "selfTransistionService" operation = "stateTransist" >
+					<mapping>
+						<coordination>
+							
+						</coordination>
+						<notification> 
+							
+						</notification> 
+					</mapping>
+					<transitions>
+						<transition shared_artifact = "purchase_order" fromState = "created" toState = "on_hold" />
+					</transitions>	
+				</invoke>	
+			</do>
+		</shared_rule>
+		<shared_rule name ="r2-confirmationPO">
+			<onevent type = "messageReceivedEvent" />
+			<pre_con> 
+				<and>	
+					<atom type = "part" message = "makePurchaseRequest"  part = "status" operator = "!=" value = "string:confirm" /> 
+					<atom type = "attribute" shared_artifact = "purchase_order"  attibute_name = "summittedDate" operator = "!=" value = "null" /> 
+					<atom type="state" shared_artifact = "purchase_order" value="on_hold"  /> 
+				</and>
+			
+			</pre_con>
+			<do>
+				<invoke role = "buyer" service = "BuyerServiceInterface" operation = "confirmPO" >
+					<mapping>
+						<coordination>
+							<map>
+								<from type = "shared_artifact" name = "purchase_order" attribute = "orderId"  />
+								<to type = "message" name = "confirmPORequest" part = "quoteId" /> 
+							</map>
+							<map>
+								<from type = "message" name = "makePurchaseRequest" part = "status"  />
+								<to type = "message" name = "confirmPORequest" part = "confirm" />
+							</map>
+							
+						</coordination>
+						<notification> 
+							<map>
+								<from type = "local_artifact" name = "quote" attribute = "comfirmedDate" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "confirmedDate"   />
+							</map>
+						
+						</notification> 
+					</mapping>
+					<transitions>
+						<transition shared_artifact = "purchase_order" fromState = "on_hold" toState = "confirmed" />
+					</transitions>	
+				</invoke>	
+			</do>
+		</shared_rule>
+		<shared_rule name ="r3-cancellationPO">
+			<onevent type = "messageReceivedEvent" />
+			<pre_con> 
+				<and>		
+					<atom type = "part" message = "makePurchaseRequest"  part = "status" operator = "!=" value = "string:cancel" /> 
+					<atom type = "attribute" shared_artifact = "purchase_order"  attibute_name = "summittedDate" operator = "!=" value = "null" /> 
+					<atom type="state" shared_artifact = "purchase_order" value="on_hold"  /> 
+				</and>
+			
+			</pre_con>
+			<do>
+				<invoke role = "buyer" service = "BuyerServiceInterface" operation = "cancelPO" >
+					<mapping>
+						<coordination>
+							<map>
+								<from type = "shared_artifact" name = "purchase_order" attribute = "orderId"  />
+								<to type = "message" name = "cancelPORequest" part = "quoteId" /> 
+							</map>
+							<map>
+								<from type = "message" name = "makePurchaseRequest" part = "status"  />
+								<to type = "message" name = "cancelPORequest" part = "cancel" />
+							</map>
+							
+						</coordination>
+						<notification> 
+							<map>
+								<from type = "local_artifact" name = "quote" attribute = "cancelledDate" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "cancelledDate"   />
+							</map>
+						</notification> 
+					</mapping>
+					<transitions>
+						<transition shared_artifact = "purchase_order" fromState = "on_hold" toState = "cancelled" />
+					</transitions>	
+				</invoke>	
+			</do>
+		</shared_rule>
+		<shared_rule name ="r4-receivePO">
+			<onevent type = "artifactChangedEvent" />
+			<pre_con> 
+				<and>	
+					<atom type = "attribute" shared_artifact = "purchase_order"  attibute_name = "confirmedDate" operator = "!=" value = "null" />
+					<atom type="state" shared_artifact = "purchase_order" value="confirmed"  /> 
+				</and>
+			
+			</pre_con>
+			<do>
+				<invoke role = "supplier" service = "SupplierServiceInterface" operation = "receivePO" >
+					<mapping>
+						<coordination>
+							<map>
+								<from type = "shared_artifact" name = "purchase_order" attribute = "orderId"  />
+								<to type = "message" name = "receivePORequest" part = "orderId" /> 
+							</map>
+							<map>
+								<from type = "shared_artifact" name = "purchase_order" attribute = "productItem"  />
+								<to type = "message" name = "receivePORequest" part = "productItem" /> 
+							</map>
+							<map>
+								<from type = "shared_artifact" name = "purchase_order" attribute = "quantity"  />
+								<to type = "message" name = "receivePORequest" part = "quantity" /> 
+							</map>
+						</coordination>
+						<notification> 
+							<map>
+								<from type = "local_artifact" name = "pickingList" attribute = "receivedDate" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "stockcheckingDate"   />
+							</map>
+							<map>
+								<from type = "local_artifact" name = "pickingList" attribute = "stockQuantity" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "current_stock"   />
+							</map>
+						</notification> 
+					</mapping>
+					<transitions>
+						<transition shared_artifact = "purchase_order" fromState = "confirmed" toState = "accepted" />
+					</transitions>	
+				</invoke>	
+			</do>
+		</shared_rule>
+		<shared_rule name ="r15-acquirePO">
+			<onevent type = "artifactChangedEvent" />
+			<pre_con> 
+				<and>			
+					<atom type = "part" shared_artifact = "purchase_order"  attibute_name = "id" operator = "!=" value = "null" />
+					<atom type = "part" shared_artifact = "purchase_order"  attibute_name = "customer" operator = "!=" value = "null" /> 
+					<atom type="state" shared_artifact = "purchase_order" value="init"  /> 
+				</and>
+			
+			</pre_con>
+			<do>
+				<invoke role = "system" service = "selfTransistionService" operation = "stateTransist" >
+					<mapping>
+						<coordination>
+							
+						</coordination>
+						<notification> 
+							
+						</notification> 
+					</mapping>
+					<transitions>
+						<transition shared_artifact = "purchase_order" fromState = "accepted" toState = "acquiring" />
+					</transitions>	
+				</invoke>	
+			</do>
+		</shared_rule>
+		<shared_rule name ="r5-cancelPO_outOfStock">
+			<onevent type = "artifactChangedEvent" />
+			<pre_con> 
+				<and>			
+					<atom type = "attribute" shared_artifact = "purchase_order"  attibute_name = "current_stock" operator = "&lt;" value = "artifact:purchase_order.quantity" />
+					<atom type="state" shared_artifact = "purchase_order" value="acquiring"  /> 
+				</and>
+			
+			</pre_con>
+			<do>
+				<invoke role = "supplier" service = "SupplierServiceInterface" operation = "cancelOutOfStockPO" >
+					<mapping>
+						<coordination>
+							<map>
+								<from type = "shared_artifact" name = "purchase_order" attribute = "orderId"  />
+								<to type = "message" name = "cancelOutOfStockPORequest" part = "orderId" /> 
+							</map>
+						</coordination>
+						<notification> 
+							<map>
+								<from type = "local_artifact" name = "pickingList" attribute = "cancelledDate" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "cancelledDate"   />
+							</map>
+						</notification> 
+					</mapping>
+					<transitions>
+						<transition shared_artifact = "purchase_order" fromState = "acquiring" toState = "cancelled" />
+					</transitions>	
+				</invoke>	
+			</do>
+		</shared_rule>
+		<shared_rule name ="r6-fulfillPO">
+			<onevent type = "artifactChangedEvent" />
+			<pre_con> 
+				<and>			
+					<atom type = "attribute" shared_artifact = "purchase_order"  attibute_name = "current_stock" operator = "&gt;=" value = "artifact:purchase_order.quantity" />
+					<atom type="state" shared_artifact = "purchase_order" value="acquiring"  /> 
+				</and>
+			
+			</pre_con>
+			<do>
+				<invoke role = "supplier" service = "SupplierServiceInterface" operation = "fulfillPO" >
+					<mapping>
+						<coordination>
+							<map>
+								<from type = "shared_artifact" name = "purchase_order" attribute = "orderId"  />
+								<to type = "message" name = "fulfillPORequest" part = "orderId" /> 
+							</map>
+						</coordination>
+						<notification> 
+							<map>
+								<from type = "local_artifact" name = "pickingList" attribute = "subtotal" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "subTotal"   />
+							</map>
+							<map>
+								<from type = "local_artifact" name = "pickingList" attribute = "filledQuantity" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "filledQuantity"   />
+							</map>
+							<map>
+								<from type = "local_artifact" name = "pickingList" attribute = "total" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "total"   />
+							</map>
+							<map>
+								<from type = "local_artifact" name = "pickingList" attribute = "tax" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "tax"   />
+							</map>
+							<map>
+								<from type = "local_artifact" name = "pickingList" attribute = "filledDate" />
+								<to type = "shared_artifact" name = "purchase_order" attribute = "filledDate"   />
+							</map>
+						</notification> 
+					</mapping>
+					<transitions>
+						<transition shared_artifact = "purchase_order" fromState = "acquiring" toState = "filled" />
+					</transitions>	
+				</invoke>	
+			</do>
+		</shared_rule>
+		
+	</shared_rules>
+	
+	<roles>
+		<role name ="buyer" role_location ="http://localhost:3000/axis2/services/SharedArtifactClientManagerService?wsdl" role_port ="SharedArtifactClientManagerServiceHttpSoap11Endpoint"  namespace ="http://intrface.buyer" >
+			<service name = "BuyerServiceInterface" location = "http://localhost:3000/axis2/services/BuyerServiceInterface?wsdl" operation = "createPO" port ="BuyerServiceInterfaceHttpSoap11Endpoint" inputmessage = "createPORequest" outputmessage = "createPOResponse" />
+			<service name = "BuyerServiceInterface" location = "http://localhost:3000/axis2/services/BuyerServiceInterface?wsdl" operation = "confirmPO" port ="BuyerServiceInterfaceHttpSoap11Endpoint" inputmessage = "confirmPORequest" outputmessage = "confirmPOResponse" />
+			<service name = "BuyerServiceInterface" location = "http://localhost:3000/axis2/services/BuyerServiceInterface?wsdl" operation = "cancelPO" port ="BuyerServiceInterfaceHttpSoap11Endpoint" inputmessage = "cancelPORequest" outputmessage = "cancelPOResponse" />
+		</role>
+		<role name ="supplier" role_location ="http://localhost:3000/axis2/services/SharedArtifactClientManagerService?wsdl" role_port ="SharedArtifactClientManagerServiceHttpSoap11Endpoint"  namespace ="http://intrface.supplier" >
+			<service name = "SupplierServiceInterface" location = "http://localhost:3000/axis2/services/SupplierServiceInterface?wsdl" operation = "receivePO" port ="SupplierServiceInterfaceHttpSoap11Endpoint" inputmessage = "receivePORequest" outputmessage = "receivePOResponse" />
+			<service name = "SupplierServiceInterface" location = "http://localhost:3000/axis2/services/SupplierServiceInterface?wsdl" operation = "fulfillPO" port ="SupplierServiceInterfaceHttpSoap11Endpoint" inputmessage = "fulfillPORequest" outputmessage = "fulfillPOResponse" />
+			<service name = "SupplierServiceInterface" location = "http://localhost:3000/axis2/services/SupplierServiceInterface?wsdl" operation = "cancelOutOfStockPO" port ="SupplierServiceInterfaceHttpSoap11Endpoint" inputmessage = "cancelOutOfStockPORequest" outputmessage = "cancelOutOfStockPOResponse" />	
+		</role>
+		<role name ="system" role_location ="null" role_port ="null"  namespace ="null" >
+			<service name = "selfTransistionService" location = "null" operation = "stateTransist" port ="null" inputmessage = "null" outputmessage = "null" />
+		</role>
+		
+	</roles>
+</coordination>

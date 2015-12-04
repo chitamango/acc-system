@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<log coordination_id="purchase-process-P1">
+<record no="1">
+<timestamp>Jun 13, 2014 4:33:46 PM</timestamp>
+<ruleId>RL1:r01-createPOprocess</ruleId>
+<roleId>S1:buyer-BuyerServiceInterface-createPO</roleId>
+<pre_sharedartifact>
+<purchase_order id="" state="init">
+<orderId>null</orderId>
+<supplierId>null</supplierId>
+<summittedDate>null</summittedDate>
+<confirmedDate>null</confirmedDate>
+<cancelledDate>null</cancelledDate>
+<filledDate>null</filledDate>
+<productItem>null</productItem>
+<quantity>null</quantity>
+<filledQuantity>null</filledQuantity>
+<subTotal>null</subTotal>
+<tax>null</tax>
+<total>null</total>
+<current_stock>null</current_stock>
+<stockcheckingDate>null</stockcheckingDate>
+</purchase_order>
+</pre_sharedartifact>
+<post_sharedartifact>
+<purchase_order id="purchase_order:Q20140613163347" state="created">
+<orderId>Q20140613163347</orderId>
+<supplierId>Asus</supplierId>
+<summittedDate>2014/06/13 16:33:47</summittedDate>
+<confirmedDate>null</confirmedDate>
+<cancelledDate>null</cancelledDate>
+<filledDate>null</filledDate>
+<productItem>Nexus5</productItem>
+<quantity>30</quantity>
+<filledQuantity>null</filledQuantity>
+<subTotal>null</subTotal>
+<tax>null</tax>
+<total>null</total>
+<current_stock>null</current_stock>
+<stockcheckingDate>null</stockcheckingDate>
+</purchase_order>
+</post_sharedartifact>
+</record>
+<record no="2">
+<timestamp>Jun 13, 2014 4:33:53 PM</timestamp>
+<ruleId>RL2:r16-waitingforconfirmation</ruleId>
+<roleId>S2:system-selfTransistionService-stateTransist</roleId>
+<pre_sharedartifact>
+<purchase_order id="purchase_order:Q20140613163347" state="created">
+<orderId>Q20140613163347</orderId>
+<supplierId>Asus</supplierId>
+<summittedDate>2014/06/13 16:33:47</summittedDate>
+<confirmedDate>null</confirmedDate>
+<cancelledDate>null</cancelledDate>
+<filledDate>null</filledDate>
+<productItem>Nexus5</productItem>
+<quantity>30</quantity>
+<filledQuantity>null</filledQuantity>
+<subTotal>null</subTotal>
+<tax>null</tax>
+<total>null</total>
+<current_stock>null</current_stock>
+<stockcheckingDate>null</stockcheckingDate>
+</purchase_order>
+</pre_sharedartifact>
+<post_sharedartifact>
+<purchase_order id="purchase_order:Q20140613163347" state="on_hold">
+<orderId>Q20140613163347</orderId>
+<supplierId>Asus</supplierId>
+<summittedDate>2014/06/13 16:33:47</summittedDate>
+<confirmedDate>null</confirmedDate>
+<cancelledDate>null</cancelledDate>
+<filledDate>null</filledDate>
+<productItem>Nexus5</productItem>
+<quantity>30</quantity>
+<filledQuantity>null</filledQuantity>
+<subTotal>null</subTotal>
+<tax>null</tax>
+<total>null</total>
+<current_stock>null</current_stock>
+<stockcheckingDate>null</stockcheckingDate>
+</purchase_order>
+</post_sharedartifact>
+</record>
+<record no="3">
+<timestamp>Jun 13, 2014 4:34:08 PM</timestamp>
+<ruleId>RL3:r3-cancellationPO</ruleId>
+<roleId>S3:buyer-BuyerServiceInterface-cancelPO</roleId>
+<pre_sharedartifact>
+<purchase_order id="purchase_order:Q20140613163347" state="on_hold">
+<orderId>Q20140613163347</orderId>
+<supplierId>Asus</supplierId>
+<summittedDate>2014/06/13 16:33:47</summittedDate>
+<confirmedDate>null</confirmedDate>
+<cancelledDate>null</cancelledDate>
+<filledDate>null</filledDate>
+<productItem>Nexus5</productItem>
+<quantity>30</quantity>
+<filledQuantity>null</filledQuantity>
+<subTotal>null</subTotal>
+<tax>null</tax>
+<total>null</total>
+<current_stock>null</current_stock>
+<stockcheckingDate>null</stockcheckingDate>
+</purchase_order>
+</pre_sharedartifact>
+<post_sharedartifact>
+<purchase_order id="purchase_order:Q20140613163347" state="cancelled">
+<orderId>Q20140613163347</orderId>
+<supplierId>Asus</supplierId>
+<summittedDate>2014/06/13 16:33:47</summittedDate>
+<confirmedDate>null</confirmedDate>
+<cancelledDate>2014/06/13 16:34:11</cancelledDate>
+<filledDate>null</filledDate>
+<productItem>Nexus5</productItem>
+<quantity>30</quantity>
+<filledQuantity>null</filledQuantity>
+<subTotal>null</subTotal>
+<tax>null</tax>
+<total>null</total>
+<current_stock>null</current_stock>
+<stockcheckingDate>null</stockcheckingDate>
+</purchase_order>
+</post_sharedartifact>
+</record>
+</log>
