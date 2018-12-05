@@ -28,6 +28,11 @@ import com.inter.log.CoordinationLog;
 import com.inter.log.LogRecord;
 
 
+/*
+
+     this class is to create log file
+
+*/
 
 public class AccLogger {
 
