@@ -6,6 +6,11 @@ import com.inter.process.Maptype;
 
 
 
+
+/*
+ *  @version 1.1
+ */
+
 public class CoordinationRule {
 	
 	private String fromType;

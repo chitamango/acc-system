@@ -1,4 +1,7 @@
 package com.inter.manager;
+/*
+ *  @version 1.1
+ */
 
 import java.net.MalformedURLException;
 import java.net.URL;

@@ -1,4 +1,7 @@
 package com.inter.instance;
+/*
+ *  @version 1.1
+ */
 
 public class SharedStateInstance {
 	

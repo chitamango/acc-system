@@ -1,4 +1,7 @@
 package com.inter.server;
+/*
+ *  @version 1.1
+ */
 
 import org.apache.axiom.om.OMAbstractFactory;
 import org.apache.axiom.om.OMElement;

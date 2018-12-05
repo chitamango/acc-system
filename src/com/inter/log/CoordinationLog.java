@@ -1,4 +1,7 @@
 package com.inter.log;
+/*
+ *  @version 1.1
+ */
 
 import java.util.ArrayList;
 import java.util.ListIterator;

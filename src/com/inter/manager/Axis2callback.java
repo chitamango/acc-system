@@ -1,4 +1,7 @@
 package com.inter.manager;
+/*
+ *  @version 1.1
+ */
 
 import javax.xml.namespace.QName;
 

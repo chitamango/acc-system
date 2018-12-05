@@ -7,6 +7,9 @@
 
 
 package com.inter.process;
+/*
+ *  @version 1.1
+ */
 
 import javax.xml.bind.annotation.XmlRegistry;
 import com.inter.process.AndType.Atom;

@@ -1,5 +1,8 @@
 package com.inter.event;
 
+/*
+ *  @version 1.1
+ */
 
 
 //import com.inter.instance.CoordinationInstance;

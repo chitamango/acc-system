@@ -1,4 +1,8 @@
 package com.inter.event;
+/*
+ *  @version 1.1
+ */
+
 
 import java.util.EventObject;
 
